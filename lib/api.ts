@@ -74,28 +74,32 @@ function overlayDrafts(docs): any {
   return Array.from(overlayed.values());
 }
 
-function convertPost(post) {
-  return {
-    ...post,
-    coverImage: urlForImage(post.coverImage).url(),
-    slug: post.slug?.current,
-    _id: post._id.startsWith("drafts.") ? post._id.slice(7) : post._id,
-  };
-}
+const fieldsQuery = `{
+  _id,
+  date,
+  content,
+  title,
+  "slug": slug.current,
+  "author": {
+    "name": author->name,
+    "picture": author->picture.asset->url
+  },
+  "coverImage": coverImage.asset->url
+}`;
 
 export async function getAllPosts() {
-  const pages = await getSanityClient().fetch("*[_type in $types]", {
-    types: ["post"],
-  });
+  const pages = await getSanityClient().fetch(
+    `*[_type == "post"]${fieldsQuery}`
+  );
   const allPages = overlayDrafts(pages);
-  return allPages.map(convertPost);
+  return allPages;
 }
 
 export async function getPostBySlug(slugString): Promise<any> {
   const result = await getSanityClient().fetch<any>(
-    "*[slug.current == $slug]",
+    `*[slug.current == $slug]${fieldsQuery}`,
     { slug: slugString }
   );
   const page = overlayDrafts(result)[0];
-  return convertPost(page);
+  return page;
 }
