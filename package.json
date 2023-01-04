@@ -19,6 +19,7 @@
     "typescript": "^4.7.4"
   },
   "devDependencies": {
+    "@stackbit/cms-sanity": "0.0.45",
     "@types/node": "^18.0.3",
     "@types/react": "^18.0.15",
     "@types/react-dom": "^18.0.6",
