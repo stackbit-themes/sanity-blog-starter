@@ -10,6 +10,7 @@ type Props = {
 const CoverImage = ({ title, src, slug }: Props) => {
   const image = (
     <img
+      data-sb-field-path="coverImage"
       src={src}
       alt={`Cover Image for ${title}`}
       className={cn('shadow-sm', {

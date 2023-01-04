@@ -1,5 +1,6 @@
 import createClient from "@sanity/client";
 import createImageUrlBuilder from "@sanity/image-url";
+import PostType from "../interfaces/post";
 
 // const postsDirectory = join(process.cwd(), '_posts')
 
@@ -87,7 +88,7 @@ const fieldsQuery = `{
   "coverImage": coverImage.asset->url
 }`;
 
-export async function getAllPosts() {
+export async function getAllPosts(): Promise<PostType[]> {
   const pages = await getSanityClient().fetch(
     `*[_type == "post"]${fieldsQuery}`
   );
@@ -95,7 +96,7 @@ export async function getAllPosts() {
   return allPages;
 }
 
-export async function getPostBySlug(slugString): Promise<any> {
+export async function getPostBySlug(slugString): Promise<PostType> {
   const result = await getSanityClient().fetch<any>(
     `*[slug.current == $slug]${fieldsQuery}`,
     { slug: slugString }

@@ -31,7 +31,7 @@ export default function Post({ post, morePosts, preview }: Props) {
           <PostTitle>Loading…</PostTitle>
         ) : (
           <>
-            <article className="mb-32">
+            <article className="mb-32" data-sb-object-id={post._id}>
               <Head>
                 <title>
                   {`${post.title} | Next.js Blog Example with ${CMS_NAME}`}

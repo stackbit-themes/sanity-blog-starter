@@ -25,6 +25,7 @@ export default function Index({ allPosts }: Props) {
           <Intro />
           {heroPost && (
             <HeroPost
+              postId={heroPost._id}
               title={heroPost.title}
               coverImage={heroPost.coverImage}
               date={heroPost.date}
@@ -42,8 +43,6 @@ export default function Index({ allPosts }: Props) {
 
 export const getStaticProps = async () => {
   const allPosts = await getAllPosts()
-  console.log(allPosts)
-
   return {
     props: { allPosts },
   }
