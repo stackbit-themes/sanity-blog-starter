@@ -11,5 +11,8 @@ export default {
             studioPath: 'studio',
             token: process.env.SANITY_TOKEN
         })
-    ]
+    ],
+    models: {
+        post: { type: 'page', urlPath: '/posts/{slug}' }
+    }
 };

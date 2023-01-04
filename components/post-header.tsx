@@ -16,17 +16,17 @@ const PostHeader = ({ title, coverImage, date, author }: Props) => {
     <>
       <PostTitle>{title}</PostTitle>
       <div className="hidden md:block md:mb-12" data-sb-field-path="author">
-        <Avatar {...author} />
+        {author && <Avatar {...author} />}
       </div>
       <div className="mb-8 md:mb-16 sm:mx-0">
-        <CoverImage title={title} src={coverImage} />
+        {coverImage && <CoverImage title={title} src={coverImage} />}
       </div>
       <div className="max-w-2xl mx-auto">
         <div className="block md:hidden mb-6" data-sb-field-path="author">
-          <Avatar {...author} />
+          {author && <Avatar {...author} />}
         </div>
         <div className="mb-6 text-lg" data-sb-field-path="date">
-          <DateFormatter dateString={date} />
+          {date && <DateFormatter dateString={date} />}
         </div>
       </div>
     </>

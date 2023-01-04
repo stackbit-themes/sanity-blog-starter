@@ -1,7 +1,6 @@
 type Props = {
   name: string
   picture: string
-  _id: string
 }
 
 const Avatar = ({ name, picture }: Props) => {
