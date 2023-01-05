@@ -24,4 +24,21 @@ export class LocalizedSanityContentSource extends SanityContentSource {
       };
     });
   }
+
+  async createDocument(options) {
+    if (options.model.name === "post" && options.locale) {
+      return super.createDocument({
+        ...options,
+        updateOperationFields: {
+          ...options.updateOperationFields,
+          __i18n_lang: {
+            opType: "set",
+            type: "string",
+            value: options.locale,
+          },
+        },
+      });
+    }
+    return super.createDocument(options);
+  }
 }

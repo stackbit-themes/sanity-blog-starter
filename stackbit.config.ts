@@ -27,6 +27,15 @@ const stackbitConfig: RawConfig = {
         return {
           ...model,
           localized: true,
+          fields: [
+            ...model.fields,
+            {
+              type: "string",
+              name: "__i18n_lang",
+              label: "lang",
+              hidden: true
+            },
+          ],
         };
       }
       return model;
@@ -53,7 +62,7 @@ const stackbitConfig: RawConfig = {
         urlPath: "/",
         label: "Home",
         stableId: "home",
-        locale: null
+        locale: null,
       },
       ...documents
         .filter((document) => document.modelName === "post")
