@@ -2,6 +2,7 @@ export default {
   name: "post",
   title: "Post",
   type: "document",
+  i18n: true,
   fields: [
     {
       name: "title",

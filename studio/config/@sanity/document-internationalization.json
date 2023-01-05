@@ -1,0 +1,10 @@
+{
+  "idStructure": "delimiter",
+  "referenceBehavior": "strong",
+  "base": "en-US",
+  "languages": [
+    { "id": "en-US", "title": "English" },
+    { "id": "es", "title": "Spanish" },
+    { "id": "fr", "title": "French" }
+  ]
+}

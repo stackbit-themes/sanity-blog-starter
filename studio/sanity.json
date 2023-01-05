@@ -12,6 +12,8 @@
     "@sanity/default-layout",
     "@sanity/default-login",
     "@sanity/desk-tool",
+    "@sanity/document-internationalization",
+    "@sanity/language-filter",
     "markdown"
   ],
   "env": {
@@ -25,6 +27,10 @@
     {
       "name": "part:@sanity/base/schema",
       "path": "./schemas/schema"
+    },
+    {
+      "name": "part:@sanity/language-filter/config",
+      "path": "./parts/languageFilterConfig.js"
     }
   ]
 }
