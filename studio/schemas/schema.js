@@ -7,6 +7,7 @@ import schemaTypes from 'all:part:@sanity/base/schema-type'
 // We import object and document schemas
 import post from './post'
 import author from './author'
+import localeString from './localeString'
 
 // Then we give our schema to the builder and provide the result to Sanity
 export default createSchema({
@@ -18,6 +19,7 @@ export default createSchema({
     // The following are document types which will appear
     // in the studio.
     post,
-    author
+    author,
+    localeString
   ]),
 })

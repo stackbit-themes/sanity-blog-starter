@@ -1,3 +1,4 @@
+
 export default {
   name: "author",
   title: "Author",
@@ -17,6 +18,11 @@ export default {
         hotspot: true,
       },
     },
+    {
+      name: "bio",
+      title: "Bio",
+      type: "localeString"
+    }
   ],
   preview: {
     select: {
