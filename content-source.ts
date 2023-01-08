@@ -6,22 +6,17 @@ import {
   SanityContentSource,
 } from "@stackbit/cms-sanity";
 import * as ContentSourceTypes from "@stackbit/types";
-import { Model, Logger } from "@stackbit/types";
+import { Model, Logger, Field, DocumentField } from "@stackbit/types";
 import { ContextualDocument } from "@stackbit/cms-sanity/dist/sanity-document-converter";
 
 export class LocalizedSanityContentSource extends SanityContentSource {
   private languageFile: string;
   private localizedModels: string[];
-  private logger: Logger;
+  private defaultLocale?: Locale;
 
   constructor(options: ContentSourceOptions & { languageFile: string }) {
     super(options);
     this.languageFile = path.join(options.rootPath, options.languageFile);
-  }
-
-  async init(options) {
-    this.logger = options.logger;
-    return super.init(options);
   }
 
   async reset(): Promise<void> {
@@ -32,6 +27,8 @@ export class LocalizedSanityContentSource extends SanityContentSource {
       sanitySchema.models
         ?.filter((model) => model.i18n)
         .map((model) => model.name) ?? [];
+    const locales = await this.getLocales();
+    this.defaultLocale = locales.find((locale) => locale.default);
   }
 
   async getLocales(): Promise<ContentSourceTypes.Locale[]> {
@@ -46,6 +43,23 @@ export class LocalizedSanityContentSource extends SanityContentSource {
     });
   }
 
+  localizeModelFields(fields: Field[]): Field[] {
+    return fields.map((field) => {
+      if (
+        field.type === "model" &&
+        field.models?.length === 1 &&
+        field.models[0] === "localeString"
+      ) {
+        return {
+          ..._.omit(field, ["models"]),
+          type: "string",
+          localized: true,
+        };
+      }
+      return field;
+    });
+  }
+
   async getModels(): Promise<Model[]> {
     const models = await super.getModels();
     return models.map((model) => {
@@ -54,7 +68,7 @@ export class LocalizedSanityContentSource extends SanityContentSource {
           ...model,
           localized: true,
           fields: [
-            ...model.fields,
+            ...this.localizeModelFields(model.fields),
             {
               type: "string",
               name: "__i18n_lang",
@@ -70,8 +84,46 @@ export class LocalizedSanityContentSource extends SanityContentSource {
           ],
         };
       }
-      return model;
+      return {
+        ...model,
+        fields: this.localizeModelFields(model.fields),
+      };
     });
+  }
+
+  localizeFields(
+    fields: Record<string, ContentSourceTypes.DocumentField>
+  ): Record<string, ContentSourceTypes.DocumentField> {
+    const result = _.reduce(
+      fields,
+      (accum, field, fieldName) => {
+        if (_.get(field, "value._type") === "localeString") {
+          const fieldValue: any = _.get(field, "value");
+          if (!fieldValue) {
+            return accum;
+          }
+          accum[fieldName] = {
+            type: "string",
+            localized: true,
+            locales: _.reduce(
+              fieldValue,
+              (accum, value, locale) => {
+                if (locale !== "_type") {
+                  accum[locale.replace("_", "-")] = { value };
+                }
+                return accum;
+              },
+              {}
+            ),
+          };
+        } else {
+          accum[fieldName] = field;
+        }
+        return accum;
+      },
+      {}
+    );
+    return result;
   }
 
   convertDocuments(options) {
@@ -83,7 +135,8 @@ export class LocalizedSanityContentSource extends SanityContentSource {
           sanitySourceDocument.context.publishedDocument)!;
         const result = {
           ...document,
-          locale: sanityDocument.__i18n_lang || "en-US",
+          fields: this.localizeFields(document.fields),
+          locale: sanityDocument.__i18n_lang,
         };
         if (sanityDocument.__i18n_base) {
           result.fields.__i18n_base = {
@@ -94,7 +147,10 @@ export class LocalizedSanityContentSource extends SanityContentSource {
         }
         return result;
       }
-      return document;
+      return {
+        ...document,
+        fields: this.localizeFields(document.fields),
+      };
     });
   }
 
