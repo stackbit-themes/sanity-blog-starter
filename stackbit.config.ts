@@ -21,54 +21,6 @@ const stackbitConfig: RawConfig = {
   models: {
     post: { type: "page", urlPath: "/posts/{slug}" },
   },
-  // mapModels({ models }) {
-  //   return models.map((model) => {
-  //     if (model.name === "post") {
-  //       return {
-  //         ...model,
-  //         localized: true,
-  //         fields: [
-  //           ...model.fields,
-  //           {
-  //             type: "string",
-  //             name: "__i18n_lang",
-  //             label: "lang",
-  //             hidden: true,
-  //           },
-  //           {
-  //             type: "reference",
-  //             name: "__i18n_base",
-  //             label: "Base translation",
-  //             models: ["post"],
-  //           },
-  //         ],
-  //       };
-  //     }
-  //     return model;
-  //   });
-  // },
-  // mapDocuments({ documents, models }) {
-  //   return documents.map((document) => {
-  //     if (document.modelName === "post") {
-  //       const sanitySourceDocument = document as ContextualDocument;
-  //       const sanityDocument = (sanitySourceDocument.context.draftDocument ??
-  //         sanitySourceDocument.context.publishedDocument)!;
-  //       const result = {
-  //         ...document,
-  //         locale: sanityDocument.__i18n_lang || "en-US",
-  //       };
-  //       if (sanityDocument.__i18n_base) {
-  //         result.fields.__i18n_base = {
-  //           type: "reference",
-  //           refId: sanityDocument.__i18n_base._ref,
-  //           refType: "document",
-  //         };
-  //       }
-  //       return result;
-  //     }
-  //     return document;
-  //   });
-  // },
   siteMap({ documents }) {
     return [
       {
@@ -87,7 +39,7 @@ const stackbitConfig: RawConfig = {
               : "";
           return {
             document,
-            urlPath: `/post/${slugValue}`,
+            urlPath: `/posts/${slugValue}`,
             locale: document.locale,
           };
         }),

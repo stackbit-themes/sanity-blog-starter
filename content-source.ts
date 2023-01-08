@@ -98,7 +98,7 @@ export class LocalizedSanityContentSource extends SanityContentSource {
     });
   }
 
-  async updateDocument(options) {
+  async updateDocument(options): Promise<ContextualDocument> {
     const { document, operations, userContext } = options;
     if (
       this.localizedModels.includes(document.modelName) &&
@@ -143,7 +143,7 @@ export class LocalizedSanityContentSource extends SanityContentSource {
         await transaction.commit({ visibility: "async" });
       }
       return {
-        document,
+        ...sanitySourceDocument,
         id: updatedDocument._id,
       };
     }
