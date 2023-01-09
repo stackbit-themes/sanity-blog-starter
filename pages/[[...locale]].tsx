@@ -8,6 +8,7 @@ import Head from "next/head";
 import { CMS_NAME } from "../lib/constants";
 import Post from "../interfaces/post";
 import { Language } from "../components/footer";
+import { useEffect } from "react";
 
 type Props = {
   allPosts: Post[];
@@ -24,6 +25,17 @@ export default function Index({
 }: Props) {
   const heroPost = allPosts[0];
   const morePosts = allPosts.slice(1);
+
+  useEffect(() => {
+    window.addEventListener('stackbitLocaleChanged', (event) => {
+      const locale = event?.detail?.locale;
+      console.log('Locale changed in Stackbit: ', locale);
+      if (locale && translations[locale]) {
+        window.location.href = translations[locale];
+      }
+    })
+  })
+
   return (
     <>
       <Layout
