@@ -1,8 +1,8 @@
 import { LocalizedSanityContentSource } from "./content-source";
-import { RawConfig } from "@stackbit/sdk";
+import { defineStackbitConfig } from "@stackbit/types";
 import _ from "lodash";
 
-const stackbitConfig: RawConfig = {
+const stackbitConfig = defineStackbitConfig({
   stackbitVersion: "~0.6.0",
   ssgName: "nextjs",
   nodeVersion: "16",
@@ -40,11 +40,11 @@ const stackbitConfig: RawConfig = {
           return {
             document,
             urlPath: `/posts/${slugValue}`,
-            locale: document.locale,
+            locale: document.locale
           };
         }),
     ];
   },
-};
+});
 
 export default stackbitConfig;
