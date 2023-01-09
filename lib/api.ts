@@ -59,7 +59,6 @@ export async function getAllPosts(
     }
     localeQuery += ")";
   }
-  console.log(localeQuery)
   const pages = await getSanityClient().fetch(
     `*[_type == "post"${localeQuery}]${fieldsQuery}`
   );
