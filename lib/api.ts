@@ -1,50 +1,7 @@
 import createClient from "@sanity/client";
 import createImageUrlBuilder from "@sanity/image-url";
+import _ from "lodash";
 import PostType from "../interfaces/post";
-
-// const postsDirectory = join(process.cwd(), '_posts')
-
-// export function getPostSlugs() {
-//   return fs.readdirSync(postsDirectory)
-// }
-
-// export function getPostBySlug(slug: string, fields: string[] = []) {
-//   const realSlug = slug.replace(/\.md$/, '')
-//   const fullPath = join(postsDirectory, `${realSlug}.md`)
-//   const fileContents = fs.readFileSync(fullPath, 'utf8')
-//   const { data, content } = matter(fileContents)
-
-//   type Items = {
-//     [key: string]: string
-//   }
-
-//   const items: Items = {}
-
-//   // Ensure only the minimal needed data is exposed
-//   fields.forEach((field) => {
-//     if (field === 'slug') {
-//       items[field] = realSlug
-//     }
-//     if (field === 'content') {
-//       items[field] = content
-//     }
-
-//     if (typeof data[field] !== 'undefined') {
-//       items[field] = data[field]
-//     }
-//   })
-
-//   return items
-// }
-
-// export function getAllPosts(fields: string[] = []) {
-//   const slugs = getPostSlugs()
-//   const posts = slugs
-//     .map((slug) => getPostBySlug(slug, fields))
-//     // sort posts by date in descending order
-//     .sort((post1, post2) => (post1.date > post2.date ? -1 : 1))
-//   return posts
-// }
 
 function getSanityClient() {
   return createClient({
@@ -80,6 +37,8 @@ const fieldsQuery = `{
   date,
   content,
   title,
+  __i18n_lang,
+  __i18n_base,
   "slug": slug.current,
   "author": {
     "name": author->name,
@@ -88,9 +47,21 @@ const fieldsQuery = `{
   "coverImage": coverImage.asset->url
 }`;
 
-export async function getAllPosts(): Promise<PostType[]> {
+export async function getAllPosts(
+  locale?: string,
+  isDefaultLocale?: boolean
+): Promise<PostType[]> {
+  let localeQuery = "";
+  if (locale) {
+    localeQuery = ` && (__i18n_lang == "${locale}"`;
+    if (isDefaultLocale) {
+      localeQuery += `|| __i18n_lang == null`;
+    }
+    localeQuery += ")";
+  }
+  console.log(localeQuery)
   const pages = await getSanityClient().fetch(
-    `*[_type == "post"]${fieldsQuery}`
+    `*[_type == "post"${localeQuery}]${fieldsQuery}`
   );
   const allPages = overlayDrafts(pages);
   return allPages;
@@ -103,4 +74,21 @@ export async function getPostBySlug(slugString): Promise<PostType> {
   );
   const page = overlayDrafts(result)[0];
   return page;
+}
+
+export async function getTranslations(post) {
+  let basePostId = post.__i18n_base?._ref || post._id;
+  if (basePostId.startsWith("drafts.")) {
+    basePostId = basePostId.slice(7);
+  }
+  const ids = [basePostId, "drafts." + basePostId];
+  const result = await getSanityClient().fetch<any>(
+    `*[_id in $ids || __i18n_base._ref in $ids]${fieldsQuery}`,
+    { ids }
+  );
+  const allPages = overlayDrafts(result);
+  return allPages.reduce((accum, curr) => {
+    accum[curr.__i18n_lang || "en-US"] = "/posts/" + curr.slug;
+    return accum;
+  }, {});
 }

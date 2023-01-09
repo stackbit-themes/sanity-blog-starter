@@ -1,21 +1,22 @@
-import Alert from './alert'
-import Footer from './footer'
+import Footer, { Language } from './footer'
 import Meta from './meta'
 
 type Props = {
   preview?: boolean
   children: React.ReactNode
+  languages?: Language[]
+  translations?: Record<string, string>
+  currentLocale?: string
 }
 
-const Layout = ({ preview, children }: Props) => {
+const Layout = ({ languages, children, translations, currentLocale }: Props) => {
   return (
     <>
       <Meta />
       <div className="min-h-screen">
-        {/* <Alert preview={preview} /> */}
         <main>{children}</main>
       </div>
-      <Footer />
+      <Footer currentLocale={currentLocale} languages={languages} translations={translations}/>
     </>
   )
 }

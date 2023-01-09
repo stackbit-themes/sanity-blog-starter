@@ -12,6 +12,8 @@ type PostType = {
     url: string
   }
   content: string
+  translations?: Record<string, string>
+  __i18n_lang?: string
 }
 
 export default PostType

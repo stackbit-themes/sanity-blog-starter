@@ -5,28 +5,30 @@ import PostBody from '../../components/post-body'
 import Header from '../../components/header'
 import PostHeader from '../../components/post-header'
 import Layout from '../../components/layout'
-import { getPostBySlug, getAllPosts } from '../../lib/api'
+import { getPostBySlug, getAllPosts, getTranslations } from '../../lib/api'
 import PostTitle from '../../components/post-title'
 import Head from 'next/head'
 import { CMS_NAME } from '../../lib/constants'
 import markdownToHtml from '../../lib/markdownToHtml'
 import type PostType from '../../interfaces/post'
+import { Language } from '../../components/footer'
 
 type Props = {
   post: PostType
-  morePosts: PostType[]
-  preview?: boolean
+  languages: Language[]
+  translations: Record<string, string>
+  currentLocale: string
 }
 
-export default function Post({ post, morePosts, preview }: Props) {
+export default function Post({ post, languages, translations, currentLocale }: Props) {
   const router = useRouter()
   if (!router.isFallback && !post?.slug) {
     return <ErrorPage statusCode={404} />
   }
   return (
-    <Layout preview={preview}>
+    <Layout languages={languages} translations={translations} currentLocale={currentLocale}>
       <Container>
-        <Header />
+        <Header homeUrl={'/' + currentLocale} />
         {router.isFallback ? (
           <PostTitle>Loading…</PostTitle>
         ) : (
@@ -62,13 +64,16 @@ type Params = {
 export async function getStaticProps({ params }: Params) {
   const post = await getPostBySlug(params.slug.join('/'))
   const content = await markdownToHtml(post.content || '')
-
+  const languageConfig = require('../../studio/config/@sanity/document-internationalization.json');
   return {
     props: {
+      currentLocale: post.__i18n_lang || languageConfig.base,
+      languages: languageConfig.languages,
       post: {
         ...post,
-        content,
+        content
       },
+      translations: await getTranslations(post)
     },
   }
 }

@@ -6,13 +6,12 @@ import {
   SanityContentSource,
 } from "@stackbit/cms-sanity";
 import * as ContentSourceTypes from "@stackbit/types";
-import { Model, Logger } from "@stackbit/types";
+import { Model } from "@stackbit/types";
 import { ContextualDocument } from "@stackbit/cms-sanity/dist/sanity-document-converter";
 
 export class LocalizedSanityContentSource extends SanityContentSource {
   private languageFile: string;
   private localizedModels: string[];
-  private logger: Logger;
 
   constructor(options: ContentSourceOptions & { languageFile: string }) {
     super(options);
