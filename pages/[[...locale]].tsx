@@ -30,11 +30,11 @@ export default function Index({
     window.addEventListener('stackbitLocaleChanged', (event) => {
       const locale = event?.detail?.locale;
       console.log('Locale changed in Stackbit: ', locale);
-      if (locale && translations[locale]) {
-        window.location.href = translations[locale];
+      if (locale && translations[locale] && location.href !== translations[locale]) {
+        location.href = translations[locale];
       }
     })
-  })
+  }, [])
 
   return (
     <>

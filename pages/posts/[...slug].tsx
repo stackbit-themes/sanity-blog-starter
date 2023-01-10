@@ -12,6 +12,7 @@ import { CMS_NAME } from '../../lib/constants'
 import markdownToHtml from '../../lib/markdownToHtml'
 import type PostType from '../../interfaces/post'
 import { Language } from '../../components/footer'
+import { useEffect } from 'react'
 
 type Props = {
   post: PostType
@@ -25,6 +26,15 @@ export default function Post({ post, languages, translations, currentLocale }: P
   if (!router.isFallback && !post?.slug) {
     return <ErrorPage statusCode={404} />
   }
+  useEffect(() => {
+    window.addEventListener('stackbitLocaleChanged', (event) => {
+      const locale = event?.detail?.locale;
+      console.log('Locale changed in Stackbit: ', locale);
+      if (locale && translations[locale] && location.href !== translations[locale]) {
+        location.href = translations[locale];
+      }
+    })
+  }, [])
   return (
     <Layout languages={languages} translations={translations} currentLocale={currentLocale}>
       <Container>
