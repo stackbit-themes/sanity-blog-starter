@@ -114,7 +114,6 @@ export class LocalizedSanityContentSource extends SanityContentSource {
             locales: _.reduce(
               fieldValue,
               (accum, value, locale) => {
-                console.log(locale)
                 if (locale !== "_type") {
                   accum[locale.replace("_", "-")] = { value };
                 }
@@ -234,17 +233,31 @@ export class LocalizedSanityContentSource extends SanityContentSource {
   }
 
   async createDocument(options) {
-    if (this.localizedModels.includes(options.model.name) && options.locale) {
-      this.logger.debug("create document with locale", options.locale);
+    const { updateOperationFields, model, locale, defaultLocaleDocumentId } = options;
+    if (this.localizedModels.includes(model.name) && locale) {
+      this.logger.debug("create document with locale", locale);
       return super.createDocument({
         ...options,
         updateOperationFields: {
-          ...options.updateOperationFields,
+          ...updateOperationFields,
           __i18n_lang: {
             opType: "set",
             type: "string",
             value: options.locale,
           },
+          ...(locale && defaultLocaleDocumentId ? {
+            __i18n_base: {
+              opType: "set",
+              type: "reference",
+              refType: "document",
+              refId: defaultLocaleDocumentId
+            },
+            _id: {
+              opType: "set",
+              type: "string",
+              value: "drafts." + defaultLocaleDocumentId + "__i18n_" + locale,
+            }
+          } : {})
         },
       });
     }
