@@ -6,6 +6,16 @@ const stackbitConfig = defineStackbitConfig({
   stackbitVersion: "~0.6.0",
   ssgName: "nextjs",
   nodeVersion: "16",
+  import: {
+    type: "sanity",
+    contentFile: "sanity-export/export.tar.gz",
+    sanityStudioPath: "studio",
+    deployStudio: true,
+    deployGraphql: false,
+    projectIdEnvVar: "SANITY_PROJECT_ID",
+    datasetEnvVar: "SANITY_DATASET",
+    tokenEnvVar: "SANITY_TOKEN",
+  },
   contentSources: [
     new LocalizedSanityContentSource({
       projectId: process.env.SANITY_PROJECT_ID,
@@ -26,7 +36,7 @@ const stackbitConfig = defineStackbitConfig({
       {
         label: "Home",
         urlPath: "/",
-        stableId: "home"
+        stableId: "home",
       },
       ...require("./studio/config/@sanity/document-internationalization.json").languages.map(
         (lang) => {

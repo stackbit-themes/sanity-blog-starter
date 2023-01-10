@@ -25,7 +25,7 @@ const Footer = (props: Props) => {
                   onChange={(e) => {
                     const locale = e.target.value;
                     window.location.href = props.translations[locale];
-                    window.stackbit?.setLocale(locale);
+                    (window as any).stackbit?.setLocale(locale);
                   }}
                   className="block appearance-none w-full bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"
                 >

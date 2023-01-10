@@ -28,7 +28,7 @@ export default function Index({
 
   useEffect(() => {
     window.addEventListener('stackbitLocaleChanged', (event) => {
-      const locale = event?.detail?.locale;
+      const locale = (event as any)?.detail?.locale;
       console.log('Locale changed in Stackbit: ', locale);
       if (locale && translations[locale] && location.href !== translations[locale]) {
         location.href = translations[locale];

@@ -34,7 +34,7 @@ export default function Post({
   }
   useEffect(() => {
     window.addEventListener("stackbitLocaleChanged", (event) => {
-      const locale = event?.detail?.locale;
+      const locale = (event as any)?.detail?.locale;
       console.log("Locale changed in Stackbit: ", locale);
       if (
         locale &&
