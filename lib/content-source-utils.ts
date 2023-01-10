@@ -8,7 +8,7 @@ import {
 } from "@stackbit/types";
 import { ContextualDocument } from "@stackbit/cms-sanity/dist/sanity-document-converter";
 
-export function localeFiledNameToLocale(localeFieldName: string) {
+export function localeFieldNameToLocale(localeFieldName: string) {
   return localeFieldName.replace("_", "-");
 }
 
@@ -51,7 +51,7 @@ export function localizeFields(
             fieldValue,
             (accum, value, locale) => {
               if (locale !== "_type") {
-                accum[localeFiledNameToLocale(locale)] = { value };
+                accum[localeFieldNameToLocale(locale)] = { value };
               }
               return accum;
             },

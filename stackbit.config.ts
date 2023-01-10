@@ -1,6 +1,6 @@
-import { LocalizedSanityContentSource } from "./content-source";
-import { defineStackbitConfig } from "@stackbit/types";
 import _ from "lodash";
+import { LocalizedSanityContentSource } from "./lib/content-source";
+import { defineStackbitConfig } from "@stackbit/types";
 
 const stackbitConfig = defineStackbitConfig({
   stackbitVersion: "~0.6.0",
