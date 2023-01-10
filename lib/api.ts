@@ -41,12 +41,14 @@ const fieldsQuery = `{
   date,
   content,
   title,
+  excerpt,
   __i18n_lang,
   __i18n_base,
   "slug": slug.current,
   "author": {
     "name": author->name,
-    "picture": author->picture.asset->url
+    "picture": author->picture.asset->url,
+    "bio": author->bio
   },
   "coverImage": coverImage.asset->url
 }`;
