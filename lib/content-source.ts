@@ -95,9 +95,18 @@ export class LocalizedSanityContentSource extends SanityContentSource {
         const sanitySourceDocument = document as ContextualDocument;
         const sanityDocument = (sanitySourceDocument.context.draftDocument ??
           sanitySourceDocument.context.publishedDocument)!;
+        const localizedFields = localizeFields(document.fields);
+        if (sanityDocument.__i18n_base._ref) {
+          localizedFields.__i18n_base = {
+            type: "reference",
+            refId: sanityDocument.__i18n_base._ref,
+            refType: "document",
+            localized: false
+          }
+        }
         return {
           ...document,
-          fields: localizeFields(document.fields),
+          fields: localizedFields,
           locale: sanityDocument.__i18n_lang,
         };
       }
