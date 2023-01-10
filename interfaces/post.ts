@@ -1,7 +1,7 @@
 import type Author from './author'
 
 type PostType = {
-  _id: string
+  id: string
   slug: string
   title: string
   date: string
@@ -13,7 +13,7 @@ type PostType = {
   }
   content: string
   translations?: Record<string, string>
-  __i18n_lang?: string
+  locale?: string
 }
 
 export default PostType

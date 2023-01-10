@@ -26,7 +26,11 @@ function overlayDrafts(docs): any {
     }
     const isDraft = doc._id.startsWith("drafts.");
     const id = isDraft ? doc._id.slice(7) : doc._id;
-    return isDraft || !map.has(id) ? map.set(id, doc) : map;
+    return isDraft || !map.has(id) ? map.set(id, {
+      ...doc,
+      id: doc._id,
+      locale: doc.__i18n_lang
+    }) : map;
   }, new Map());
 
   return Array.from(overlayed.values());

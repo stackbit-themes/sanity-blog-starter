@@ -43,7 +43,7 @@ export default function Post({ post, languages, translations, currentLocale }: P
           <PostTitle>Loading…</PostTitle>
         ) : (
           <>
-            <article className="mb-32" data-sb-object-id={post._id}>
+            <article className="mb-32" data-sb-object-id={post.id}>
               <Head>
                 <title>
                   {`${post.title} | Next.js Blog Example with ${CMS_NAME}`}
@@ -77,7 +77,7 @@ export async function getStaticProps({ params }: Params) {
   const languageConfig = require('../../studio/config/@sanity/document-internationalization.json');
   return {
     props: {
-      currentLocale: post.__i18n_lang || languageConfig.base,
+      currentLocale: post.locale || languageConfig.base,
       languages: languageConfig.languages,
       post: {
         ...post,

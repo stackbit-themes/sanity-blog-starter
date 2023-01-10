@@ -1,19 +1,17 @@
 import _ from "lodash";
 import path from "path";
-import crypto from "crypto";
 import {
   ContentSourceOptions,
   SanityContentSource,
 } from "@stackbit/cms-sanity";
-import * as ContentSourceTypes from "@stackbit/types";
-import {
-  Model,
-  Field,
-  UpdateOperation,
-  UpdateOperationUnset,
-  UpdateOperationSet,
-} from "@stackbit/types";
+import { Locale, Model } from "@stackbit/types";
 import { ContextualDocument } from "@stackbit/cms-sanity/dist/sanity-document-converter";
+import {
+  localeToLocaleFieldName,
+  localizeFields,
+  localizeModelFields,
+  updateBaseTranslation,
+} from "./content-source-utils";
 
 export class LocalizedSanityContentSource extends SanityContentSource {
   private languageFile: string;
@@ -37,7 +35,7 @@ export class LocalizedSanityContentSource extends SanityContentSource {
     this.defaultLocale = locales.find((locale) => locale.default);
   }
 
-  async getLocales(): Promise<ContentSourceTypes.Locale[]> {
+  async getLocales(): Promise<Locale[]> {
     const languageConfig = require(this.languageFile);
     const languages = languageConfig.languages;
     return languages.map((lang, i) => {
@@ -49,23 +47,6 @@ export class LocalizedSanityContentSource extends SanityContentSource {
     });
   }
 
-  localizeModelFields(fields: Field[]): Field[] {
-    return fields.map((field) => {
-      if (
-        field.type === "model" &&
-        field.models?.length === 1 &&
-        field.models[0] === "localeString"
-      ) {
-        return {
-          ..._.omit(field, ["models"]),
-          type: "string",
-          localized: true,
-        };
-      }
-      return field;
-    });
-  }
-
   async getModels(): Promise<Model[]> {
     const models = await super.getModels();
     return models.map((model) => {
@@ -74,7 +55,7 @@ export class LocalizedSanityContentSource extends SanityContentSource {
           ...model,
           localized: true,
           fields: [
-            ...this.localizeModelFields(model.fields),
+            ...localizeModelFields(model.fields),
             {
               type: "string",
               name: "__i18n_lang",
@@ -92,44 +73,9 @@ export class LocalizedSanityContentSource extends SanityContentSource {
       }
       return {
         ...model,
-        fields: this.localizeModelFields(model.fields),
+        fields: localizeModelFields(model.fields),
       };
     });
-  }
-
-  localizeFields(
-    fields: Record<string, ContentSourceTypes.DocumentField>
-  ): Record<string, ContentSourceTypes.DocumentField> {
-    const result = _.reduce(
-      fields,
-      (accum, field, fieldName) => {
-        if (field.type === "string" && field.localized) {
-          const fieldValue: any = _.get(field, "value");
-          if (!fieldValue) {
-            return accum;
-          }
-          accum[fieldName] = {
-            type: "string",
-            localized: true,
-            locales: _.reduce(
-              fieldValue,
-              (accum, value, locale) => {
-                if (locale !== "_type") {
-                  accum[locale.replace("_", "-")] = { value };
-                }
-                return accum;
-              },
-              {}
-            ),
-          };
-        } else {
-          accum[fieldName] = field;
-        }
-        return accum;
-      },
-      {}
-    );
-    return result;
   }
 
   convertDocuments(options) {
@@ -141,60 +87,15 @@ export class LocalizedSanityContentSource extends SanityContentSource {
           sanitySourceDocument.context.publishedDocument)!;
         return {
           ...document,
-          fields: this.localizeFields(document.fields),
+          fields: localizeFields(document.fields),
           locale: sanityDocument.__i18n_lang,
         };
       }
       return {
         ...document,
-        fields: this.localizeFields(document.fields),
+        fields: localizeFields(document.fields),
       };
     });
-  }
-
-  async updateBaseTranslation(
-    sanitySourceDocument: ContextualDocument,
-    op: UpdateOperationSet | UpdateOperationUnset,
-    userContext: any
-  ) {
-    const userClient = this.getApiClientForUser({ userContext });
-    const sanityDocument = (sanitySourceDocument.context.draftDocument ??
-      sanitySourceDocument.context.publishedDocument)!;
-
-    let updatedDocument;
-    if (op.opType === "set") {
-      const opField = op.field;
-      if (opField.type == "reference") {
-        updatedDocument = {
-          ...sanityDocument,
-          __i18n_base: {
-            _ref: opField.refId,
-            _strengthenOnPublish: {},
-            _type: "reference",
-            _weak: true,
-          },
-          _id:
-            "drafts." + opField.refId + "__i18n_" + sanityDocument.__i18n_lang,
-        };
-      }
-    } else {
-      updatedDocument = {
-        ...sanityDocument,
-        __i18n_base: null,
-        _id: crypto.randomBytes(16).toString("hex"),
-      };
-    }
-    if (updatedDocument && sanityDocument._id !== updatedDocument._id) {
-      const transaction = userClient
-        .transaction()
-        .createIfNotExists(updatedDocument)
-        .delete(sanityDocument._id);
-      await transaction.commit({ visibility: "async" });
-    }
-    return {
-      ...sanitySourceDocument,
-      id: updatedDocument._id,
-    };
   }
 
   async updateDocument(options): Promise<ContextualDocument> {
@@ -206,7 +107,8 @@ export class LocalizedSanityContentSource extends SanityContentSource {
       operations[0].fieldPath[0] === "__i18n_base"
     ) {
       const op = operations[0];
-      return this.updateBaseTranslation(document, op, userContext);
+      const userClient = this.getApiClientForUser({ userContext });
+      return updateBaseTranslation(document, op, userClient);
     }
     return super.updateDocument({
       ...options,
@@ -220,9 +122,8 @@ export class LocalizedSanityContentSource extends SanityContentSource {
             ...op,
             fieldPath: [
               ...op.fieldPath,
-              (op.locale ?? this.defaultLocale?.code ?? "en-US").replace(
-                "-",
-                "_"
+              localeToLocaleFieldName(
+                op.locale ?? this.defaultLocale?.code ?? "en-US"
               ),
             ],
           };
@@ -233,9 +134,12 @@ export class LocalizedSanityContentSource extends SanityContentSource {
   }
 
   async createDocument(options) {
-    const { updateOperationFields, model, locale, defaultLocaleDocumentId } = options;
+    const { updateOperationFields, model, locale, defaultLocaleDocumentId } =
+      options;
     if (this.localizedModels.includes(model.name) && locale) {
-      this.logger.debug("create document with locale", locale);
+      this.logger.debug(
+        `create document with locale ${locale} (base: ${defaultLocaleDocumentId})`
+      );
       return super.createDocument({
         ...options,
         updateOperationFields: {
@@ -245,19 +149,22 @@ export class LocalizedSanityContentSource extends SanityContentSource {
             type: "string",
             value: options.locale,
           },
-          ...(locale && defaultLocaleDocumentId ? {
-            __i18n_base: {
-              opType: "set",
-              type: "reference",
-              refType: "document",
-              refId: defaultLocaleDocumentId
-            },
-            _id: {
-              opType: "set",
-              type: "string",
-              value: "drafts." + defaultLocaleDocumentId + "__i18n_" + locale,
-            }
-          } : {})
+          ...(locale && defaultLocaleDocumentId
+            ? {
+                __i18n_base: {
+                  opType: "set",
+                  type: "reference",
+                  refType: "document",
+                  refId: defaultLocaleDocumentId,
+                },
+                _id: {
+                  opType: "set",
+                  type: "string",
+                  value:
+                    "drafts." + defaultLocaleDocumentId + "__i18n_" + locale,
+                },
+              }
+            : {}),
         },
       });
     }

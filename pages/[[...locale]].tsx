@@ -50,7 +50,7 @@ export default function Index({
           <Intro />
           {heroPost && (
             <HeroPost
-              postId={heroPost._id}
+              postId={heroPost.id}
               title={heroPost.title}
               coverImage={heroPost.coverImage}
               date={heroPost.date}
