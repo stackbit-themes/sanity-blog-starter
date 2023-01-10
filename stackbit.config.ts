@@ -24,11 +24,20 @@ const stackbitConfig = defineStackbitConfig({
   siteMap({ documents }) {
     return [
       {
-        urlPath: "/",
         label: "Home",
-        stableId: "home",
-        locale: null,
+        urlPath: "/",
+        stableId: "home"
       },
+      ...require("./studio/config/@sanity/document-internationalization.json").languages.map(
+        (lang) => {
+          return {
+            label: lang.title,
+            urlPath: `/${lang.id}`,
+            stableId: lang.id,
+            locale: lang.id,
+          };
+        }
+      ),
       ...documents
         .filter((document) => document.modelName === "post")
         .map((document) => {
@@ -40,7 +49,7 @@ const stackbitConfig = defineStackbitConfig({
           return {
             document,
             urlPath: `/posts/${slugValue}`,
-            locale: document.locale
+            locale: document.locale,
           };
         }),
     ];
