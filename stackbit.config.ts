@@ -10,7 +10,7 @@ const stackbitConfig = defineStackbitConfig({
     type: "sanity",
     contentFile: "sanity-export/export.tar.gz",
     sanityStudioPath: "studio",
-    deployStudio: true,
+    deployStudio: false,
     deployGraphql: false,
     projectIdEnvVar: "SANITY_PROJECT_ID",
     datasetEnvVar: "SANITY_DATASET",
