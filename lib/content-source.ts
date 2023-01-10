@@ -81,19 +81,20 @@ export class LocalizedSanityContentSource extends SanityContentSource {
   convertDocuments(options) {
     const documents = super.convertDocuments(options);
     return documents.map((document) => {
+      const model = options.modelMap[document.modelName];
       if (this.localizedModels.includes(document.modelName)) {
         const sanitySourceDocument = document as ContextualDocument;
         const sanityDocument = (sanitySourceDocument.context.draftDocument ??
           sanitySourceDocument.context.publishedDocument)!;
         return {
           ...document,
-          fields: localizeFields(document.fields),
+          fields: localizeFields(document.fields, model),
           locale: sanityDocument.__i18n_lang,
         };
       }
       return {
         ...document,
-        fields: localizeFields(document.fields),
+        fields: localizeFields(document.fields, model),
       };
     });
   }

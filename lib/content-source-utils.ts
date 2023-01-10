@@ -5,6 +5,7 @@ import {
   UpdateOperationUnset,
   UpdateOperationSet,
   DocumentField,
+  Model,
 } from "@stackbit/types";
 import { ContextualDocument } from "@stackbit/cms-sanity/dist/sanity-document-converter";
 
@@ -34,12 +35,15 @@ export function localizeModelFields(fields: Field[]): Field[] {
 }
 
 export function localizeFields(
-  fields: Record<string, DocumentField>
+  fields: Record<string, DocumentField>,
+  model: Model
 ): Record<string, DocumentField> {
+  const modelFieldByName = _.keyBy(model.fields, modelField => modelField.name);
   const result = _.reduce(
     fields,
     (accum, field, fieldName) => {
-      if (field.type === "string" && field.localized) {
+      const modelField = modelFieldByName[fieldName];
+      if (modelField.type === "string" && modelField.localized) {
         const fieldValue: any = _.get(field, "value");
         if (!fieldValue) {
           return accum;
@@ -65,6 +69,7 @@ export function localizeFields(
     },
     {}
   );
+  // TODO handle nested objects if needed
   return result;
 }
 
