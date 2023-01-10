@@ -17,6 +17,7 @@ export class LocalizedSanityContentSource extends SanityContentSource {
   private languageFile: string;
   private localizedModels: string[];
   private defaultLocale?: Locale;
+  private originalModels: Model[];
 
   constructor(options: ContentSourceOptions & { languageFile: string }) {
     super(options);
@@ -26,6 +27,7 @@ export class LocalizedSanityContentSource extends SanityContentSource {
   async reset(): Promise<void> {
     await super.reset();
 
+    // find all localizable models based on the `i18n` mark
     const sanitySchema = await this.getSanitySchema();
     this.localizedModels =
       sanitySchema.models
@@ -35,6 +37,7 @@ export class LocalizedSanityContentSource extends SanityContentSource {
     this.defaultLocale = locales.find((locale) => locale.default);
   }
 
+  // convert @sanity/document-internationalization configuration file to Locale types
   async getLocales(): Promise<Locale[]> {
     const languageConfig = require(this.languageFile);
     const languages = languageConfig.languages;
@@ -47,9 +50,11 @@ export class LocalizedSanityContentSource extends SanityContentSource {
     });
   }
 
+  // retrieve all models from Sanity
+  // mark needed fields as localized and add plugin internal fields to schema
   async getModels(): Promise<Model[]> {
-    const models = await super.getModels();
-    return models.map((model) => {
+    this.originalModels = await super.getModels();
+    return this.originalModels.map((model) => {
       if (this.localizedModels.includes(model.name)) {
         return {
           ...model,
@@ -78,27 +83,33 @@ export class LocalizedSanityContentSource extends SanityContentSource {
     });
   }
 
+  // convert Sanity documents to Stackbit documents
+  // and mark appropriate locales
   convertDocuments(options) {
-    const documents = super.convertDocuments(options);
+    const documents = super.convertDocuments({
+      ...options,
+      modelMap: _.keyBy(this.originalModels, (model) => model.name),
+    });
     return documents.map((document) => {
-      const model = options.modelMap[document.modelName];
       if (this.localizedModels.includes(document.modelName)) {
         const sanitySourceDocument = document as ContextualDocument;
         const sanityDocument = (sanitySourceDocument.context.draftDocument ??
           sanitySourceDocument.context.publishedDocument)!;
         return {
           ...document,
-          fields: localizeFields(document.fields, model),
+          fields: localizeFields(document.fields),
           locale: sanityDocument.__i18n_lang,
         };
       }
       return {
         ...document,
-        fields: localizeFields(document.fields, model),
+        fields: localizeFields(document.fields),
       };
     });
   }
 
+  // override behavior of updating reference to base translation.
+  // when updating the reference, we change the _id of the document as well.
   async updateDocument(options): Promise<ContextualDocument> {
     const { document, operations, userContext } = options;
     if (
@@ -134,6 +145,8 @@ export class LocalizedSanityContentSource extends SanityContentSource {
     });
   }
 
+  // override document creation to support reference to base translation
+  // and other internal locale fields
   async createDocument(options) {
     const { updateOperationFields, model, locale, defaultLocaleDocumentId } =
       options;

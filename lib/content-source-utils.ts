@@ -5,7 +5,6 @@ import {
   UpdateOperationUnset,
   UpdateOperationSet,
   DocumentField,
-  Model,
 } from "@stackbit/types";
 import { ContextualDocument } from "@stackbit/cms-sanity/dist/sanity-document-converter";
 
@@ -35,31 +34,43 @@ export function localizeModelFields(fields: Field[]): Field[] {
 }
 
 export function localizeFields(
-  fields: Record<string, DocumentField>,
-  model: Model
+  fields: Record<string, DocumentField>
 ): Record<string, DocumentField> {
-  const modelFieldByName = _.keyBy(model.fields, modelField => modelField.name);
   const result = _.reduce(
     fields,
     (accum, field, fieldName) => {
-      const modelField = modelFieldByName[fieldName];
-      if (modelField.type === "string" && modelField.localized) {
-        const fieldValue: any = _.get(field, "value");
-        if (!fieldValue) {
-          return accum;
-        }
+      if (
+        field.type === "model" &&
+        field.localized !== true &&
+        field.modelName === "localeString"
+      ) {
         accum[fieldName] = {
           type: "string",
           localized: true,
           locales: _.reduce(
-            fieldValue,
+            field.fields,
             (accum, value, locale) => {
               if (locale !== "_type") {
-                accum[localeFieldNameToLocale(locale)] = { value };
+                accum[localeFieldNameToLocale(locale)] = value;
               }
               return accum;
             },
             {}
+          ),
+        };
+      } else if (
+        (field.type === "model" || field.type === "object") &&
+        field.localized !== true
+      ) {
+        accum[fieldName] = {
+          ...field,
+          fields: localizeFields(field.fields),
+        };
+      } else if (field.type === "list" && field.localized !== true) {
+        accum[fieldName] = {
+          ...field,
+          items: field.items.map(
+            (item) => localizeFields({ field: item }).field
           ),
         };
       } else {
@@ -69,7 +80,6 @@ export function localizeFields(
     },
     {}
   );
-  // TODO handle nested objects if needed
   return result;
 }
 
