@@ -22,6 +22,7 @@
     "typescript": "^4.7.4"
   },
   "devDependencies": {
+    "@stackbit/cli": "^0.2.69",
     "@stackbit/cms-sanity": "^0.0.48-sanity-locale.1",
     "@stackbit/types": "^0.1.8",
     "@types/node": "^18.0.3",

@@ -1,62 +1,103 @@
-# A statically generated blog example using Next.js, Sanity, and TypeScript
+# Stackbit blog starter for Sanity
 
-This is the existing [blog-starter](https://github.com/vercel/next.js/tree/canary/examples/blog-starter) plus TypeScript.
+This example showcases Stackbit with a simple Next.js and Sanity-based blog that implements localization.
 
-This example showcases Next.js's [Static Generation](https://nextjs.org/docs/basic-features/pages) feature using Markdown files as the data source.
+Based on Next.js's [blog-starter](https://github.com/vercel/next.js/tree/canary/examples/blog-starter).
 
-The blog posts are stored in `/_posts` as Markdown files with front matter support. Adding a new Markdown file in there will create a new blog post.
+# Getting started
 
-To create the blog posts we use [`remark`](https://github.com/remarkjs/remark) and [`remark-html`](https://github.com/remarkjs/remark-html) to convert the Markdown files into an HTML string, and then send it down as a prop to the page. The metadata of every post is handled by [`gray-matter`](https://github.com/jonschlinkert/gray-matter) and also sent in props to the page.
-
-## Demo
-
-[https://next-blog-starter.vercel.app/](https://next-blog-starter.vercel.app/)
-
-## Deploy your own
-
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=next-example) or preview live with [StackBlitz](https://stackblitz.com/github/vercel/next.js/tree/canary/examples/blog-starter)
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/git/external?repository-url=https://github.com/vercel/next.js/tree/canary/examples/blog-starter&project-name=blog-starter&repository-name=blog-starter)
-
-### Related examples
-
-- [WordPress](/examples/cms-wordpress)
-- [DatoCMS](/examples/cms-datocms)
-- [Sanity](/examples/cms-sanity)
-- [TakeShape](/examples/cms-takeshape)
-- [Prismic](/examples/cms-prismic)
-- [Contentful](/examples/cms-contentful)
-- [Strapi](/examples/cms-strapi)
-- [Agility CMS](/examples/cms-agilitycms)
-- [Cosmic](/examples/cms-cosmic)
-- [ButterCMS](/examples/cms-buttercms)
-- [Storyblok](/examples/cms-storyblok)
-- [GraphCMS](/examples/cms-graphcms)
-- [Kontent](/examples/cms-kontent)
-- [Umbraco Heartcore](/examples/cms-umbraco-heartcore)
-- [Builder.io](/examples/cms-builder-io)
-- [TinaCMS](/examples/cms-tina/)
-
-## How to use
-
-Execute [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app) with [npm](https://docs.npmjs.com/cli/init), [Yarn](https://yarnpkg.com/lang/en/docs/cli/create/), or [pnpm](https://pnpm.io) to bootstrap the example:
+## Local
 
 ```bash
-npx create-next-app --example blog-starter blog-starter-app
+# Clone the repository
+git clone https://github.com/stackbit/sanity-blog-starter
+
+cd sanity blog-starter
+
+# Install dependencies
+npm install
+
+# Run Stackbit local dev
+stackbit dev
 ```
 
-```bash
-yarn create next-app --example blog-starter blog-starter-app
+## Stackbit
+
+Use this repository with [Stackbit import flow](https://app.stackbit.com/custom).
+
+# Localization
+
+The site implements two types of localization:
+
+## Document-level localization
+
+Using the `@sanity/document-internationalization` plugin.
+
+The language configuration is specified in `studio/config/@sanity/document-internationalization.json`:
+
+```json
+{
+  "idStructure": "delimiter",
+  "referenceBehavior": "strong",
+  "base": "en-US",
+  "languages": [
+    { "id": "en-US", "title": "English" },
+    { "id": "es", "title": "Spanish" },
+    { "id": "fr", "title": "French" }
+  ]
+}
 ```
 
-```bash
-pnpm create next-app --example blog-starter blog-starter-app
+Each translation document gets 2 new fields:
+
+* `__i18n_lang` the locale
+* `__i18n_base` a reference to the "base" translation
+
+## Field-level localization
+
+Using the `@sanity/language-filter` plugin.
+
+Shares the same language configuration file as document-level localization.
+
+Uses a custom-defined type `localeString` (`studio/schema/localeString.js`) to define a string field that can contain multiple translations.
+
+# Stackbit Content Source
+
+We define a custom Stackbit Content Source (`lib/content-source.ts`) that is referenced in our `stackbit.config.js`. 
+
+This content source inherits from a basic Sanity content source (available through `@stackbit/cms-sanity`) and adds additional handling for localization based on its implementation for this project.
+
+Mainly, it performs the following -
+
+1. Marks documents with the appropriate `locale` based on `__i18n_lang`
+2. Maintains the relationship to the base translation using `__i18n_base`
+3. Translates custom `localeString` into a native Stackbit localized string field.
+
+
+# Stackbit Studio integration
+
+To support a tight integration with the Stackbit Studio, we've also implemented the following - 
+
+
+1. `stackbitLocaleChanged` event handler to detect when a user changes the locale in the Stackbit Studio:
+
+```javascript
+window.addEventListener("stackbitLocaleChanged", (event) => {
+    const locale = event.detail.locale;
+    // ...
+    // redirect to appropriate page
+}
 ```
 
-Your blog should be up and running on [http://localhost:3000](http://localhost:3000)! If it doesn't work, post on [GitHub discussions](https://github.com/vercel/next.js/discussions).
+2. Tell Stackbit that the locale was changed in language selector:
 
-Deploy it to the cloud with [Vercel](https://vercel.com/new?utm_source=github&utm_medium=readme&utm_campaign=next-example) ([Documentation](https://nextjs.org/docs/deployment)).
-
-# Notes
-
-`blog-starter` uses [Tailwind CSS](https://tailwindcss.com) [(v3.0)](https://tailwindcss.com/blog/tailwindcss-v3).
+```jsx
+<select
+    onChange={(e) => {
+        const locale = e.target.value;
+        window.location.href = props.translations[locale];
+        // update Stackbit Studio
+        window.stackbit.setLocale(locale);
+    }}
+>
+```
