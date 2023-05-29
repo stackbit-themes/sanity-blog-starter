@@ -3,8 +3,9 @@ import path from "path";
 import {
   ContentSourceOptions,
   SanityContentSource,
+  SchemaContext,
 } from "@stackbit/cms-sanity";
-import { Locale, Model } from "@stackbit/types";
+import { Locale, Model, Schema } from "@stackbit/types";
 import { ContextualDocument } from "@stackbit/cms-sanity/dist/sanity-document-converter";
 import {
   localeToLocaleFieldName,
@@ -52,35 +53,40 @@ export class LocalizedSanityContentSource extends SanityContentSource {
 
   // retrieve all models from Sanity
   // mark needed fields as localized and add plugin internal fields to schema
-  async getModels(): Promise<Model[]> {
-    this.originalModels = await super.getModels();
-    return this.originalModels.map((model) => {
-      if (this.localizedModels.includes(model.name)) {
+  async getSchema(): Promise<Schema<SchemaContext>> {
+    const schema = await super.getSchema();
+    this.originalModels = schema.models;
+    return {
+      ...schema,
+      locales: await this.getLocales(),
+      models: this.originalModels.map((model) => {
+        if (this.localizedModels.includes(model.name)) {
+          return {
+            ...model,
+            localized: true,
+            fields: [
+              ...localizeModelFields(model.fields),
+              {
+                type: "string",
+                name: "__i18n_lang",
+                label: "lang",
+                hidden: true,
+              },
+              {
+                type: "reference",
+                name: "__i18n_base",
+                label: "Base translation",
+                models: [model.name],
+              },
+            ],
+          };
+        }
         return {
           ...model,
-          localized: true,
-          fields: [
-            ...localizeModelFields(model.fields),
-            {
-              type: "string",
-              name: "__i18n_lang",
-              label: "lang",
-              hidden: true,
-            },
-            {
-              type: "reference",
-              name: "__i18n_base",
-              label: "Base translation",
-              models: [model.name],
-            },
-          ],
+          fields: localizeModelFields(model.fields),
         };
-      }
-      return {
-        ...model,
-        fields: localizeModelFields(model.fields),
-      };
-    });
+      })
+    }
   }
 
   // convert Sanity documents to Stackbit documents
