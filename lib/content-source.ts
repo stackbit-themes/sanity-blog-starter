@@ -3,8 +3,9 @@ import path from "path";
 import {
   ContentSourceOptions,
   SanityContentSource,
+  SchemaContext,
 } from "@stackbit/cms-sanity";
-import { Locale, Model } from "@stackbit/types";
+import { Locale, Model, Schema } from "@stackbit/types";
 import { ContextualDocument } from "@stackbit/cms-sanity/dist/sanity-document-converter";
 import {
   localeToLocaleFieldName,
@@ -56,7 +57,8 @@ export class LocalizedSanityContentSource extends SanityContentSource {
     const schema = await super.getSchema();
     this.originalModels = schema.models;
     return {
-      ...schema, 
+      ...schema,
+      locales: await this.getLocales(),
       models: this.originalModels.map((model) => {
         if (this.localizedModels.includes(model.name)) {
           return {
