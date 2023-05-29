@@ -92,8 +92,10 @@ export class LocalizedSanityContentSource extends SanityContentSource {
   // convert Sanity documents to Stackbit documents
   // and mark appropriate locales
   convertDocuments(options) {
+    const modelMap = _.keyBy(this.originalModels, (model) => model.name);
     const documents = super.convertDocuments({
       ...options,
+      getModelByName: (name) => modelMap[name],
       modelMap: _.keyBy(this.originalModels, (model) => model.name),
     });
     return documents.map((document) => {
